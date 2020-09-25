@@ -91,15 +91,15 @@ void loop() {
     Serial.println("\n A Client just connected to the server");
     while(client.connected()) {
       if(client.available()){
-        String clientMessage = client.readStringUntil('\r');
-        Serial.print(clientMessage);
-        if(clientMessage.length() == 1 && clientMessage[0] =='\n') {
+        //String clientMessage = client.readStringUntil('\r');
+        char clientMessage = client.read();
+        if(clientMessage == '\n') {
           client.println(constructHTMLpage());
           break;
         }
       }
     }
-    delay(1000);
+    delay(500);
     client.stop();
     Serial.println("\n The server has disconnected the Client");
   }
@@ -125,51 +125,22 @@ String constructHTMLpage(){
   DHT.read11(DHT11PIN);
 
   
-  int numSSID = WiFi.scanNetworks();
+
   String HTMLpage = String("HTTP/1.1 200 OK\r\n") +
                             "Content-Type: text/html\r\n" +
                             "Connection: close\r\n" +
                             "Refresh: 5\r\n" +
                             "\r\n" +
                             "<!DOCTYPE HTML>" +
+                            "<head><meta charset=\"utf-8\"></head>" + 
                             "<html><body>\r\n" +
-                            "<h2>WIFI NETWORKS</h2>\r\n" +
-                            "<table><tr><th>humidity</th><th>temperature</th><th>Encryption type</th></tr>\r\n";
+                            "<h2>Weather Data</h2>\r\n";
                             
-  HTMLpage = HTMLpage + String("<tr><td>");
-  HTMLpage = HTMLpage + String("Humidity: " + String(DHT.humidity));
-  HTMLpage = HTMLpage + String("</td></tr>");
-  HTMLpage = HTMLpage + String("Temperature: " + String(DHT.temperature));
-  HTMLpage = HTMLpage + String("</td></tr>");
-
-  HTMLpage = HTMLpage + String("</table></body></html>\r\n");
+  HTMLpage = HTMLpage + String("Humidity: " + String(DHT.humidity) + "%");
+  HTMLpage = HTMLpage + String("</br>");
+  HTMLpage = HTMLpage + String("Temperature: " + String(DHT.temperature) + "°C");
+  HTMLpage = HTMLpage + String("</td><td>");
+  HTMLpage = HTMLpage + String("</body></html>\r\n");
+  HTMLpage = HTMLpage + String("<script>setTimeout(() => { window.location.reload(false);  }, 5000);</script>\r\n");
   return HTMLpage;
-  delay(2000);
-}
-
-
-
-
-
-
-/* ==========================================================================
- *encryptionTypeStr:
- *Will accept a WiFi.encryptionType() integer and convert it into a more
- *meaningful string. 
- ============================================================================ */
-String encryptionTypeStr(uint8_t authmode) {
-    switch(authmode) {
-        case ENC_TYPE_NONE:
-            return "OPEN";
-        case ENC_TYPE_WEP:
-            return "WEP";
-        case ENC_TYPE_TKIP:
-            return "WPA_PSK";
-        case ENC_TYPE_CCMP:
-            return "WPA2_PSK";
-        case ENC_TYPE_AUTO:
-            return "WPA_WPA2_PSK";
-        default:
-            return "UNKOWN";
-    }
 }
