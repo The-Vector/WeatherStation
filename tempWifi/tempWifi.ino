@@ -42,6 +42,7 @@ const char* ssid = "PinkFluffyUnicorn";
 const char* password = "12345678";
 WiFiServer server(80);
 
+int rainPin = 5;
 
 
 /* ==========================================================================
@@ -57,6 +58,8 @@ void setup() {
   Serial.begin(115200);
   WiFi.mode(WIFI_AP);
   boolean r = WiFi.softAP(ssid, password);
+
+  pinMode(rainPin, INPUT);
 
   if (r) {
     server.begin();
@@ -86,6 +89,7 @@ void setup() {
  * Notify when the client has been disconnected.
  ============================================================================ */
 void loop() {
+  
   WiFiClient client = server.available();
   if(client){
     Serial.println("\n A Client just connected to the server");
@@ -123,7 +127,7 @@ void loop() {
  ============================================================================ */
 String constructHTMLpage(){
   DHT.read11(DHT11PIN);
-
+  int rainValue = analogRead(rainPin);
   
 
   String HTMLpage = String("HTTP/1.1 200 OK\r\n") +
@@ -139,6 +143,8 @@ String constructHTMLpage(){
   HTMLpage = HTMLpage + String("Humidity: " + String(DHT.humidity) + "%");
   HTMLpage = HTMLpage + String("</br>");
   HTMLpage = HTMLpage + String("Temperature: " + String(DHT.temperature) + "°C");
+  HTMLpage = HTMLpage + String("</br>");
+  HTMLpage = HTMLpage + String("Rain Value (analog?): " + String(rainValue));
   HTMLpage = HTMLpage + String("</td><td>");
   HTMLpage = HTMLpage + String("</body></html>\r\n");
   HTMLpage = HTMLpage + String("<script>setTimeout(() => { window.location.reload(false);  }, 5000);</script>\r\n");
