@@ -35,6 +35,7 @@
 
 
 #define DHT11PIN 2
+#define analogRainPin 5
 
 dht DHT;
 
@@ -42,8 +43,7 @@ const char* ssid = "PinkFluffyUnicorn";
 const char* password = "12345678";
 WiFiServer server(80);
 
-int rainPin = 5;
-
+int rainValue;
 
 /* ==========================================================================
  * SETUP:
@@ -59,7 +59,7 @@ void setup() {
   WiFi.mode(WIFI_AP);
   boolean r = WiFi.softAP(ssid, password);
 
-  pinMode(rainPin, INPUT);
+  //pinMode(analogRainPin, INPUT);
 
   if (r) {
     server.begin();
@@ -127,9 +127,16 @@ void loop() {
  ============================================================================ */
 String constructHTMLpage(){
   DHT.read11(DHT11PIN);
-  int rainValue = analogRead(rainPin);
+  //rainValue = analogRead(analogRainPin);
+  int digRainValue = digitalRead(analogRainPin);
+  char* result = "no rain";
+  if(digRainValue == 1){
+    result = "rain detected";
+  }
+  else{
+    result = "no rain";
+  }
   
-
   String HTMLpage = String("HTTP/1.1 200 OK\r\n") +
                             "Content-Type: text/html\r\n" +
                             "Connection: close\r\n" +
@@ -144,9 +151,11 @@ String constructHTMLpage(){
   HTMLpage = HTMLpage + String("</br>");
   HTMLpage = HTMLpage + String("Temperature: " + String(DHT.temperature) + "°C");
   HTMLpage = HTMLpage + String("</br>");
-  HTMLpage = HTMLpage + String("Rain Value (analog?): " + String(rainValue));
+  //HTMLpage = HTMLpage + String("Rain Value (analog?): " + String(rainValue));
+  //HTMLpage = HTMLpage + String("</br>");
+  HTMLpage = HTMLpage + String("Rain: " + String(result) + " " + String(digRainValue));
   HTMLpage = HTMLpage + String("</td><td>");
   HTMLpage = HTMLpage + String("</body></html>\r\n");
-  HTMLpage = HTMLpage + String("<script>setTimeout(() => { window.location.reload(false);  }, 5000);</script>\r\n");
+  HTMLpage = HTMLpage + String("<script>setTimeout(() => { window.location.reload(false);  }, 2500);</script>\r\n");
   return HTMLpage;
 }
