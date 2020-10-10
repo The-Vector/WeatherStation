@@ -10,8 +10,9 @@
   url          = {https://doi.org/10.5281/zenodo.2589394}
 }*/
 
-#define DHT11PIN 3
+#define DHT11PIN A1
 #define moistPin A0
+#define SERIAL_BAUD 115200
 
 const int DRY = 750;
 const int WET = 150;
@@ -25,7 +26,7 @@ String result = "";
 dht DHT;
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(SERIAL_BAUD);
   pinMode(moistPin, OUTPUT);
   digitalWrite(moistPin, LOW);
 }
@@ -35,6 +36,7 @@ void loop() {
   DHT.read11(DHT11PIN);
   humid = DHT.humidity;
   temp = DHT.temperature;
+  
   digitalWrite(moistPin, HIGH);
   delay(3000);
   moist = analogRead(0);
@@ -70,5 +72,9 @@ void loop() {
   //Serial.println(result);
   result = "[" + result + "]";
   Serial.println(result); //send serial data to wifi module
+  result = "[" + String(temp) + "]";
+  Serial.println(result);
+  result = "[" + String(humid) + "]";
+  Serial.println(result);
 }
   
