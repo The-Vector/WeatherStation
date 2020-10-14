@@ -1,94 +1,96 @@
+//this script has to be compiled with the "generic ESP8266 Module" board selected 
+
+//including all the relevant arduino libraries
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h>
-#include <ESP8266WebServer.h>
+//#include <ESP8266WebServer.h>
 
-#define SERIAL_BAUD 115200 //make sure this is the same in arduino.ino
+//defining the serial rate to "talk" and recieve data from the arduino
+#define SERIAL_BAUD 115200
 
-ESP8266WebServer server(80);
+//set the name and password of the wifi network to allow people to connect
+const char* ssid = "Weather Station";
+const char* password = "12345678";
 
-String receivedCommand = "";
-bool dataIn = false;
-
-const String html_page = "<!DOCTYPE html>"
-                         "<html>"
-                         "  <head>"
-                         "    <meta name='viewport' content='width=device-width, initial-scale=1.0' />"
-                         "  </head>"
-                         "  <body>"
-                         "    <p>data from Arduino:</p>"
-                         "    <pre id='reading'></pre>"
-                         "    <script>"
-                         "      (function() {"
-                         "        /* get new data every second*/"
-                         "        setInterval(function() {"
-                         "          fetch('/reading')"
-                         "          .then(response => { return response.text();})"
-                         "          .then(text => {"
-                         "            document.getElementById('reading').textContent = text;"
-                         "          });"
-                         "        }, 100);"
-                         "      })();"
-                         "    </script>"
-                         "  </body>"
-                         "</html>";
-
-const IPAddress serverIPAddress(10, 0, 0, 7);
+//tell the arduino that there will be a server at port 80
+WiFiServer server(80);
 
 void setup() {
-  // put your setup code here, to run once:
+  //begin the serial to communicate with the arduino
   Serial.begin(SERIAL_BAUD);
+  //set the wifi mode and the soft access point
+  WiFi.mode(WIFI_AP);
+  boolean r = WiFi.softAP(ssid, password);
+
+  //if the soft access point started, begin the server
+  if (r) {
+    server.begin();
+    Serial.println("");
+    Serial.print("Please connect to the Access Point: ");
+    Serial.println(ssid);
+    Serial.printf("then open %s in a web browser\n", WiFi.softAPIP().toString().c_str());
+    Serial.println("");
+  } else {
+    Serial.println("FAILED to create Access Point");
+    while(1){}
+  }
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-
-  server.on("/reading", []() { //send raw serial data
-    //ahh put stuff below into here ??
-  });
-  
-  while (Serial.available())
-  {
-    char c = Serial.read(); //read it
-
-    if (c == '[')
-    {
-      //this is the start of the command string
-      receivedCommand = "";
-      dataIn = true;
-    }
-    //otherwise, we are still reading the command string:
-    else if (dataIn && c != ']')
-    {
-      receivedCommand += c;
-    }
-
-    else if (dataIn && c == ']')
-    {
-      //finished receiving the command, process it
-      Serial.print("XC4411 has been running for ");
-      Serial.print(millis(), DEC);
-      Serial.println(" milliseconds..");
-       Serial.print("Received command was '");
-      Serial.print(receivedCommand);
-      Serial.print("' - action: ");
-
-      if (receivedCommand == "LEDON")
-      {
-        Serial.println("TURN LED ON");
-        digitalWrite(led_pin, HIGH);
+  //set the client to be server availability
+  WiFiClient client = server.available();
+  //if a user/client connects to the server
+  if(client){
+    Serial.println("\n A Client just connected to the server");
+    //while the client is still connected to the site/wifi network
+    while(client.connected()) {
+      if(client.available()){
+        String clientMessage = client.readStringUntil('\r');
+        if(clientMessage.length() == 1 && clientMessage[0] =='\n') {
+          //wait until the wifi sends weather data
+          while(Serial.read() != '[')
+            continue;
+          //save the weather data into veriables 
+          String result = Serial.readStringUntil('\n');
+          String temp = Serial.readStringUntil('\n');
+          String humid = Serial.readStringUntil('\n');
+          //create a html page displaying the weather data for the client
+          client.println(constructHTMLpage(result, temp, humid));
+          break;
+        }
       }
-      else if (receivedCommand == "LEDOFF")
-      {
-        Serial.println("TURN LED OFF");
-        digitalWrite(led_pin, LOW);
-      }
-      else if (receivedCommand == "LEDTOGGLE")
-      {
-        Serial.println("CHANGE LED");
-        digitalWrite(led_pin, !digitalRead(led_pin));
-      }
-      Serial.println("---------------------------------------");
     }
+    delay(1000);
+    client.stop();
+    Serial.println("\n The server has disconnected the Client");
   }
-  delay(10);
+}
+
+//construct a html page based on the weather data btained by the arduino
+String constructHTMLpage(String result, String temp, String humid){
+
+  //top half is setup, not much happening client side 
+  String HTMLpage = String("HTTP/1.1 200 OK\r\n") +
+                            "Content-Type: text/html\r\n" +
+                            "Connection: close\r\n" +
+                            "Refresh: 5\r\n" +
+                            "\r\n" +
+                            "<!DOCTYPE HTML>" +
+                            "<html><body>\r\n" +
+                            "<h2>Weather Data</h2>\r\n" +
+                            "<table><tr><th>Weather Result</th><th>Temperature</th><th>Humidity</th></tr>\r\n";
+
+  //add the results ( result temperature, humidity) to the table displayed with html
+  HTMLpage = HTMLpage + String("<tr><td>");
+  HTMLpage = HTMLpage + String(result);
+  HTMLpage = HTMLpage + String("</td><td>");
+  HTMLpage = HTMLpage + String(temp);
+  HTMLpage = HTMLpage + String("</td><td>");
+  HTMLpage = HTMLpage + String(humid);
+  HTMLpage = HTMLpage + String("</td></tr>");
+  //refresh the page every 2.5 seconds to keep the weather data relevant / up to date
+  HTMLpage = HTMLpage + String("<script>setTimeout(() => { window.location.reload(false);  }, 2500);</script>\r\n");
+  HTMLpage = HTMLpage + String("</table></body></html>\r\n");
+  //returns the htmlpage string to the client
+  return HTMLpage;
 }
