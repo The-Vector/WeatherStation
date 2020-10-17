@@ -17,7 +17,7 @@
 #define SERIAL_BAUD 115200
 
 //define what analog values are wet and dry
-const int DRY = 750;
+const int DRY = 850;
 const int WET = 150;
 int moist = 0;
 
@@ -32,33 +32,25 @@ dht DHT;
 void setup() {
   //beign serial communication
   Serial.begin(SERIAL_BAUD);
-  //set the rain voltage pin to output, and low
-  pinMode(moistPin, OUTPUT);
-  digitalWrite(moistPin, LOW);
 }
 
 void loop() {
   //define chk to be the dht11 read function
   int chk = DHT.read11(DHT11PIN);
   
-  //set the rain sensor voltage to high to allow the data to be read 
-  digitalWrite(moistPin, HIGH);
   //read the rain value and set it to the moist variable
-  moist = analogRead(0);
-  digitalWrite(moistPin, LOW);
-  //map the moist valeu between 0 and 60.4, to allow the machine learning algorithm to correctly use the data
-  moist = map(moist, WET, DRY, 60.4, 0);
+  moist = analogRead(A0);
+  //map the moist value between 0 and 100, to get a percentage map(value, fromlow, fromhigh, tolow, tohigh)
+  moist  = map(moist, 120, 800, 100, 0);
 
-  //set the moist vale to be readable by the machine learning algorithm. 
-  moist = moist * 0.05;
-
-  //machine learning stuff
+  //code for sending the weather data to the machine learning algorithm 
   const int32_t length = 3;
   //set values to be the rain value, temperature, and humidity
   float values[length] = {moist, temp, humid};
   //the machine learning algorithm then outputs the predicted class (wet weather, wet oval, or no rain) based on the variables.
   const int32_t predicted_class = RAIN_predict(values, length);
 
+  //change the integer values to be changed into strings
   switch(predicted_class){
     case(0):
       result = "no rain";
@@ -70,10 +62,12 @@ void loop() {
       result = "rain";
       break;
   }
+  
   //print the results to serial so the web server can read and display them. 
   Serial.println("[" + result); //"[" allows the web server to start recording data
+  Serial.println(moist);
   Serial.println(DHT.temperature);
   Serial.println(DHT.humidity);
-  delay(1000);
+  delay(2200);
 }
   

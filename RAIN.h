@@ -10,7 +10,7 @@ EmlTreesNode RAIN_nodes[10] = {
   { 0, 12.0, 3, 6 },
   { 0, 9.0, 4, 5 },
   { -1, 1, -1, -1 },
-  { 1, 19.0, 4, 1 },
+  { 2, 79.5, 1, 4 },
   { 0, 22.0, 7, 8 },
   { 0, 19.0, 8, 9 },
   { -1, 2, -1, -1 },
@@ -34,10 +34,10 @@ static inline int32_t RAIN_predict_tree_0(const float *features, int32_t feature
                   if (features[0] < 9.0) {
                       return 1;
                   } else {
-                      if (features[1] < 19.0) {
-                          return 1;
-                      } else {
+                      if (features[2] < 79.5) {
                           return 0;
+                      } else {
+                          return 1;
                       }
                   }
               } else {

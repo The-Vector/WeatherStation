@@ -52,10 +52,11 @@ void loop() {
             continue;
           //save the weather data into veriables 
           String result = Serial.readStringUntil('\n');
+          String rain_percent = Serial.readStringUntil('\n');
           String temp = Serial.readStringUntil('\n');
           String humid = Serial.readStringUntil('\n');
           //create a html page displaying the weather data for the client
-          client.println(constructHTMLpage(result, temp, humid));
+          client.println(constructHTMLpage(result, rain_percent, temp, humid));
           break;
         }
       }
@@ -67,7 +68,7 @@ void loop() {
 }
 
 //construct a html page based on the weather data btained by the arduino
-String constructHTMLpage(String result, String temp, String humid){
+String constructHTMLpage(String result, String rain_percent, String temp, String humid){
 
   //top half is setup, not much happening client side 
   String HTMLpage = String("HTTP/1.1 200 OK\r\n") +
@@ -78,11 +79,13 @@ String constructHTMLpage(String result, String temp, String humid){
                             "<!DOCTYPE HTML>" +
                             "<html><body>\r\n" +
                             "<h2>Weather Data</h2>\r\n" +
-                            "<table><tr><th>Weather Result</th><th>Temperature</th><th>Humidity</th></tr>\r\n";
+                            "<table><tr><th>Weather Result</th><th>Rain %</th><th>Temperature</th><th>Humidity</th></tr>\r\n";
 
   //add the results ( result temperature, humidity) to the table displayed with html
   HTMLpage = HTMLpage + String("<tr><td>");
   HTMLpage = HTMLpage + String(result);
+  HTMLpage = HTMLpage + String("</td><td>");
+  HTMLpage = HTMLpage + String(rain_percent);
   HTMLpage = HTMLpage + String("</td><td>");
   HTMLpage = HTMLpage + String(temp);
   HTMLpage = HTMLpage + String("</td><td>");
