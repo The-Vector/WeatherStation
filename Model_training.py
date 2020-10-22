@@ -23,7 +23,7 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import SVC
 
 #select the data file, csv = comma separated values
-url = 'WeatherDataTest.csv'
+url = 'WeatherData.csv'
 #names for each columns
 names = ["Rainfall (mm)","Temperature (°C)","relative humidity (%)","Is raining"]
 dataset = read_csv(url, names=names)

@@ -3,7 +3,6 @@
 //including all the relevant arduino libraries
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h>
-//#include <ESP8266WebServer.h>
 
 //defining the serial rate to "talk" and recieve data from the arduino
 #define SERIAL_BAUD 115200
@@ -26,6 +25,7 @@ void setup() {
   if (r) {
     server.begin();
     Serial.println("");
+    //printing instructions on how to connect to serial
     Serial.print("Please connect to the Access Point: ");
     Serial.println(ssid);
     Serial.printf("then open %s in a web browser\n", WiFi.softAPIP().toString().c_str());
@@ -93,6 +93,7 @@ String constructHTMLpage(String result, String rain_percent, String temp, String
   HTMLpage = HTMLpage + String("</td></tr>");
   //refresh the page every 2.5 seconds to keep the weather data relevant / up to date
   HTMLpage = HTMLpage + String("<script>setTimeout(() => { window.location.reload(false);  }, 2500);</script>\r\n");
+  //close the html tags
   HTMLpage = HTMLpage + String("</table></body></html>\r\n");
   //returns the htmlpage string to the client
   return HTMLpage;

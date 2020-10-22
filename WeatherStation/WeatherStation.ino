@@ -1,4 +1,4 @@
-//iunclude relevant libraries
+//include relevant libraries
 #include <dht.h>
 #include "RAIN.h" //machine learning was helped by emlearn,referenced below:
 /*misc{emlearn,
@@ -21,6 +21,7 @@ const int DRY = 850;
 const int WET = 150;
 int moist = 0;
 
+//variables to store the temperature values.
 float temp;
 float humid;
 
