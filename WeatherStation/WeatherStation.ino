@@ -17,8 +17,8 @@
 #define SERIAL_BAUD 115200
 
 //define what analog values are wet and dry
-const int DRY = 850;
-const int WET = 150;
+const int DRY = 700;
+const int WET = 120;
 int moist = 0;
 
 //variables to store the temperature values.
@@ -42,7 +42,7 @@ void loop() {
   //read the rain value and set it to the moist variable
   moist = analogRead(A0);
   //map the moist value between 0 and 100, to get a percentage map(value, fromlow, fromhigh, tolow, tohigh)
-  moist  = map(moist, 120, 800, 100, 0);
+  moist  = map(moist, WET, DRY, 100, 0);
 
   //code for sending the weather data to the machine learning algorithm 
   const int32_t length = 3;
